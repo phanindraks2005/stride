@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Nav from '@/components/Nav'
@@ -9,7 +9,7 @@ import { ChevronDown, Pencil } from 'lucide-react'
 import { calculateStreak } from '@/lib/streak'
 import Skeleton from '@/components/Skeleton'
 
-export default function Dashboard() {
+function DashboardContent() {
   const [trackers, setTrackers] = useState([])
   const [todayLogs, setTodayLogs] = useState({})
   const [loading, setLoading] = useState(true)
@@ -440,5 +440,13 @@ if (loading) return (
         </div>
       </div>
     </>
+  )
+}
+
+export default function Dashboard() {
+  return (
+    <Suspense fallback={<div style={{ padding: '40px', color: 'var(--text-mid)' }}>Loading...</div>}>
+      <DashboardContent />
+    </Suspense>
   )
 }
