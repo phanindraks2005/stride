@@ -11,6 +11,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.112.3",
     "@google/genai": "^2.12.0",
+    "@supabase/supabase-js": "^2.110.8",
     "date-fns": "^4.4.0",
     "framer-motion": "^12.42.2",
     "lucide-react": "^1.25.0",
