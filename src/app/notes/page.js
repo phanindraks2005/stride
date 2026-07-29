@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Nav from '@/components/Nav'
 import { Trash2, Plus } from 'lucide-react'
+import { useRef } from 'react'
 
 export default function Notes() {
   const [notes, setNotes] = useState([])
@@ -13,6 +14,43 @@ export default function Notes() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const router = useRouter()
+  const saveTimeout = useRef(null)
+
+  useEffect(() => {
+    if (!title.trim() && !content.trim()) return
+
+    if (saveTimeout.current) clearTimeout(saveTimeout.current)
+
+    saveTimeout.current = setTimeout(() => {
+      autoSave()
+    }, 1000)
+
+    return () => clearTimeout(saveTimeout.current)
+  }, [title, content])
+
+  async function autoSave() {
+    if (!title.trim() && !content.trim()) return
+
+    setSaving(true)
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (selectedNote) {
+      await supabase
+        .from('notes')
+        .update({ title: title.trim() || 'Untitled', content: content.trim() })
+        .eq('id', selectedNote.id)
+    } else {
+      const { data: newNote } = await supabase
+        .from('notes')
+        .insert({ user_id: user.id, title: title.trim() || 'Untitled', content: content.trim() })
+        .select()
+        .single()
+      setSelectedNote(newNote)
+    }
+
+    setSaving(false)
+    loadNotes()
+  }
 
   useEffect(() => {
     loadNotes()
@@ -45,30 +83,6 @@ export default function Notes() {
     setSelectedNote(note)
     setTitle(note.title || '')
     setContent(note.content || '')
-  }
-
-  async function handleSaveNote() {
-    if (!title.trim() && !content.trim()) return
-
-    setSaving(true)
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (selectedNote) {
-      await supabase
-        .from('notes')
-        .update({ title: title.trim() || 'Untitled', content: content.trim() })
-        .eq('id', selectedNote.id)
-    } else {
-      const { data: newNote } = await supabase
-        .from('notes')
-        .insert({ user_id: user.id, title: title.trim() || 'Untitled', content: content.trim() })
-        .select()
-        .single()
-      setSelectedNote(newNote)
-    }
-
-    setSaving(false)
-    loadNotes()
   }
 
   async function handleDeleteNote(noteId) {
@@ -169,9 +183,9 @@ export default function Notes() {
                 marginBottom: '16px',
               }}
             />
-            <button onClick={handleSaveNote} className="log-btn" disabled={saving}>
-              {saving ? 'Saving...' : selectedNote ? 'Update' : 'Save note'}
-            </button>
+            <p style={{ fontSize: '12px', color: 'var(--text-low)' }}>
+              {saving ? 'Saving...' : selectedNote ? 'Saved' : 'Start typing to save'}
+            </p>
           </div>
         </div>
       </div>

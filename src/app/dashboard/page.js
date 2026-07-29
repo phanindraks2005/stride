@@ -8,6 +8,7 @@ import WaveFill from '@/components/WaveFill'
 import { ChevronDown, Pencil } from 'lucide-react'
 import { calculateStreak } from '@/lib/streak'
 import Skeleton from '@/components/Skeleton'
+import ProductTour from '@/components/ProductTour'
 
 function DashboardContent() {
   const [trackers, setTrackers] = useState([])
@@ -26,6 +27,7 @@ function DashboardContent() {
   const [editingTracker, setEditingTracker] = useState(null)
   const [editValues, setEditValues] = useState({ name: '', unit: '', target_value: '' })
   const [profileName, setProfileName] = useState('')
+  const [showTour, setShowTour] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -48,12 +50,19 @@ function DashboardContent() {
     setStreak(streakCount)
 
     const { data: profile } = await supabase
-      .from('profiles')
-      .select('name')
-      .eq('user_id', user.id)
-      .single()
 
-    if (profile?.name) setProfileName(profile.name)
+  .from('profiles')
+  .select('name, has_seen_tour')
+  .eq('user_id', user.id)
+  .single()
+
+    if (profile?.name) {
+    setProfileName(profile.name)
+  }
+
+    if (!profile?.has_seen_tour) {
+    setShowTour(true)
+    }
 
     const startOfDay = viewDate ? new Date(viewDate) : new Date()
     startOfDay.setHours(0, 0, 0, 0)
@@ -74,6 +83,23 @@ function DashboardContent() {
     setTodayLogs(totals)
     setLoading(false)
   }
+
+  async function handleTourComplete() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return
+
+  await supabase
+    .from('profiles')
+    .update({
+      has_seen_tour: true,
+    })
+    .eq('user_id', user.id)
+
+  setShowTour(false)
+}
 
   async function handleLog(trackerId) {
     const value = parseFloat(inputValues[trackerId])
@@ -200,6 +226,7 @@ if (loading) return (
   )
   return (
     <>
+    {showTour && <ProductTour onComplete={handleTourComplete} />}
       <div style={{ position: 'relative', minHeight: '100vh', overflow: 'hidden' }}>
         <div className="copilot-blob copilot-blob-1" />
         <div className="copilot-blob copilot-blob-2" />

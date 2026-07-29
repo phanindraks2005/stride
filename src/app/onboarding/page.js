@@ -11,6 +11,17 @@ export default function Onboarding() {
   const [weight, setWeight] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const [gender, setGender] = useState('')
+  const [avatarSeed, setAvatarSeed] = useState('')
+
+  function getAvatarOptions() {
+    const style = gender === 'female' ? 'adventurer' : gender === 'male' ? 'adventurer' : 'adventurer'
+    const seeds = ['Aiden', 'Sasha', 'Milo', 'Luna', 'Kai', 'Nova']
+    return seeds.map((seed) => ({
+      seed,
+      url: `https://api.dicebear.com/9.x/avataaars/svg?seed=${seed}`,
+    }))
+  }
 
   function calculateBMI() {
     if (!height || !weight) return null
@@ -32,6 +43,8 @@ export default function Onboarding() {
     await supabase.from('profiles').upsert({
       user_id: user.id,
       name: name || null,
+      gender: gender || null,
+      avatar_seed: avatarSeed || null,
       age: skip ? null : (age ? parseInt(age) : null),
       height_cm: skip ? null : (height ? parseFloat(height) : null),
       weight_kg: skip ? null : (weight ? parseFloat(weight) : null),
@@ -45,6 +58,10 @@ export default function Onboarding() {
     e.preventDefault()
     if (!name.trim()) return
     setStep(2)
+  }
+
+  function handleGenderAvatarSubmit() {
+    setStep(3)
   }
 
   const bmi = calculateBMI()
@@ -82,6 +99,56 @@ export default function Onboarding() {
         )}
 
         {step === 2 && (
+          <div>
+            <p style={{ fontSize: '13px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--teal)', marginBottom: '10px' }}>
+              Nice to meet you, {name}
+            </p>
+            <h1 style={{ fontSize: '26px', marginBottom: '20px' }}>A bit about you</h1>
+
+            <p style={{ fontSize: '13px', color: 'var(--text-mid)', marginBottom: '10px' }}>Gender</p>
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
+              {['Male', 'Female'].map((g) => (
+                <button
+                  key={g}
+                  onClick={() => setGender(g.toLowerCase())}
+                  style={{
+                    flex: 1, padding: '12px', borderRadius: '10px',
+                    background: gender === g.toLowerCase() ? 'linear-gradient(135deg, var(--violet), var(--coral))' : 'var(--card)',
+                    border: gender === g.toLowerCase() ? 'none' : '1px solid var(--card-border)',
+                    color: gender === g.toLowerCase() ? '#fff' : 'var(--text-mid)',
+                    cursor: 'pointer', fontSize: '14px',
+                  }}
+                >
+                  {g}
+                </button>
+              ))}
+            </div>
+
+            <p style={{ fontSize: '13px', color: 'var(--text-mid)', marginBottom: '10px' }}>Choose an avatar</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '24px' }}>
+              {getAvatarOptions().map((opt) => (
+                <button
+                  key={opt.seed}
+                  onClick={() => setAvatarSeed(opt.seed)}
+                  style={{
+                    padding: '8px', borderRadius: '12px',
+                    background: 'var(--card)',
+                    border: avatarSeed === opt.seed ? '2px solid var(--violet)' : '1px solid var(--card-border)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <img src={opt.url} alt={opt.seed} style={{ width: '100%', borderRadius: '8px' }} />
+                </button>
+              ))}
+            </div>
+
+            <button onClick={handleGenderAvatarSubmit} className="log-btn" style={{ width: '100%' }}>
+              Continue
+            </button>
+          </div>
+        )}
+
+        {step === 3 && (
           <div>
             <p style={{ fontSize: '13px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--teal)', marginBottom: '10px' }}>
               Nice to meet you, {name}

@@ -12,23 +12,33 @@ export default function Nav() {
   const router = useRouter()
   const [showCalendar, setShowCalendar] = useState(false)
   const [userInitial, setUserInitial] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState('')
+  const hideOnRoutes = ['/', '/login', '/signup', '/onboarding']
+  if (hideOnRoutes.includes(pathname)) return null
 
-  useEffect(() => {
-    async function loadInitial() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('name')
-        .eq('user_id', user.id)
-        .single()
-
-      const initial = profile?.name?.[0]?.toUpperCase() || user.email[0].toUpperCase()
-      setUserInitial(initial)
-    }
-    loadInitial()
+useEffect(() => {
+    loadProfileInfo()
+    window.addEventListener('profileUpdated', loadProfileInfo)
+    return () => window.removeEventListener('profileUpdated', loadProfileInfo)
   }, [])
+
+  async function loadProfileInfo() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('name, avatar_seed')
+      .eq('user_id', user.id)
+      .single()
+
+    const initial = profile?.name?.[0]?.toUpperCase() || user.email[0].toUpperCase()
+    setUserInitial(initial)
+
+    if (profile?.avatar_seed) {
+      setAvatarUrl(`https://api.dicebear.com/9.x/avataaars/svg?seed=${profile.avatar_seed}`)
+    }
+  }
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -129,15 +139,15 @@ export default function Nav() {
         <Link
           href="/profile"
           style={{
-            width: '30px', height: '30px', borderRadius: '50%',
-            background: pathname === '/profile' ? 'linear-gradient(135deg, var(--violet), var(--coral))' : 'var(--card)',
-            border: pathname === '/profile' ? 'none' : '1px solid var(--card-border)',
+            width: '30px', height: '30px', borderRadius: '50%', overflow: 'hidden',
+            background: avatarUrl ? 'var(--card)' : (pathname === '/profile' ? 'linear-gradient(135deg, var(--violet), var(--coral))' : 'var(--card)'),
+            border: pathname === '/profile' ? '2px solid var(--violet)' : '1px solid var(--card-border)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: '#fff', fontSize: '13px', fontWeight: 500, textDecoration: 'none',
             fontFamily: 'Space Grotesk, sans-serif',
           }}
         >
-          {userInitial}
+          {avatarUrl ? <img src={avatarUrl} alt="avatar" style={{ width: '100%', height: '100%' }} /> : userInitial}
         </Link>
 
         <button
