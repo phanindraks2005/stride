@@ -13,10 +13,8 @@ export default function Nav() {
   const [showCalendar, setShowCalendar] = useState(false)
   const [userInitial, setUserInitial] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
-  const hideOnRoutes = ['/', '/login', '/signup', '/onboarding']
-  if (hideOnRoutes.includes(pathname)) return null
 
-useEffect(() => {
+  useEffect(() => {
     loadProfileInfo()
     window.addEventListener('profileUpdated', loadProfileInfo)
     return () => window.removeEventListener('profileUpdated', loadProfileInfo)
@@ -53,6 +51,9 @@ useEffect(() => {
     paddingBottom: '4px',
     borderBottom: pathname === path ? '2px solid var(--violet)' : '2px solid transparent',
   })
+
+  const hideOnRoutes = ['/', '/login', '/signup', '/onboarding']
+  if (hideOnRoutes.includes(pathname)) return null
 
   return (
     <div style={{
