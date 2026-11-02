@@ -25,8 +25,6 @@ export async function POST(request) {
     const { message } = await request.json()
 
     const systemContext = await buildUserContext(userId)
-    console.log('CONTEXT SENT TO AI:', systemContext)
-    console.log('USER ID USED:', userId)
 
     const response = await ai.models.generateContent({
       model: 'gemini-flash-latest',
