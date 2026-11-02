@@ -3,12 +3,26 @@ import { NextResponse } from 'next/server'
 import { buildUserContext } from '../../../../lib/context-builder'
 import { toolDefinitions } from '../../../../lib/tools'
 import { executeTool } from '../../../../lib/tool-executor'
+import { supabaseServer } from '../../../../lib/supabase-server'
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
 
 export async function POST(request) {
   try {
-    const { message, userId } = await request.json()
+    // The service-role client bypasses RLS, so the user id must come from a
+    // verified token, never from the request body.
+    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { data: { user }, error: authError } = await supabaseServer.auth.getUser(token)
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const userId = user.id
+    const { message } = await request.json()
 
     const systemContext = await buildUserContext(userId)
     console.log('CONTEXT SENT TO AI:', systemContext)
