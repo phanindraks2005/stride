@@ -2,7 +2,7 @@
 
 A habit and fitness tracker with an AI copilot that can act on your data, not just talk about it.
 
-**Live:** https://stride-382x.vercel.app
+**Live:** https://stride-ks.vercel.app
 
 ## Features
 
