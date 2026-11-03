@@ -3,6 +3,19 @@ import { useState, useRef, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import Nav from '@/components/Nav'
 
+// A little longer than the server's own 50 s budget, so the server's message
+// arrives first when Gemini is slow.
+const LIBRA_TIMEOUT_MS = 60_000
+
+const LIBRA_MESSAGES = {
+  offline: "You're offline. Check your connection and try again.",
+  timeout: 'Libra is taking too long. Please try again in a minute.',
+  broken: 'Something went wrong on our side. Please try again.',
+  signedOut: 'Your session has ended. Log in again to talk to Libra.',
+}
+
+class LibraError extends Error {}
+
 export default function Copilot() {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
@@ -42,41 +55,68 @@ export default function Copilot() {
     setInput('')
     setLoading(true)
 
-    const { data: { user } } = await supabase.auth.getUser()
+    try {
+      const data = await askLibra(userMessage)
 
-    await supabase.from('messages').insert({
-      user_id: user.id,
-      role: 'user',
-      content: userMessage,
-    })
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', text: data.reply, artifact: data.artifact },
+      ])
+
+      await supabase.from('messages').insert({
+        user_id: data.userId,
+        role: 'assistant',
+        content: data.reply,
+        artifact: data.artifact || null,
+      })
+    } catch (err) {
+      // Shown in the chat but not saved, so errors don't become part of the history.
+      const text = err instanceof LibraError ? err.message : LIBRA_MESSAGES.broken
+      setMessages((prev) => [...prev, { role: 'assistant', text, error: true }])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function askLibra(message) {
+    if (!navigator.onLine) throw new LibraError(LIBRA_MESSAGES.offline)
 
     const { data: { session } } = await supabase.auth.getSession()
-
-    const res = await fetch('/api/copilot/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${session?.access_token}`,
-      },
-      body: JSON.stringify({ message: userMessage }),
-    })
-    const data = await res.json()
-
-    const replyText = data.reply || data.error || 'Something went wrong.'
-
-    setMessages((prev) => [
-      ...prev,
-      { role: 'assistant', text: replyText, artifact: data.artifact },
-    ])
+    if (!session) throw new LibraError(LIBRA_MESSAGES.signedOut)
 
     await supabase.from('messages').insert({
-      user_id: user.id,
-      role: 'assistant',
-      content: replyText,
-      artifact: data.artifact || null,
+      user_id: session.user.id,
+      role: 'user',
+      content: message,
     })
 
-    setLoading(false)
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), LIBRA_TIMEOUT_MS)
+    let res
+    try {
+      res = await fetch('/api/copilot/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ message }),
+        signal: controller.signal,
+      })
+    } catch {
+      throw new LibraError(controller.signal.aborted ? LIBRA_MESSAGES.timeout : navigator.onLine ? LIBRA_MESSAGES.broken : LIBRA_MESSAGES.offline)
+    } finally {
+      clearTimeout(timer)
+    }
+
+    // The route always answers with JSON; anything else is a crash or a proxy page.
+    const data = await res.json().catch(() => null)
+    if (!data) throw new LibraError(LIBRA_MESSAGES.broken)
+    if (res.status === 401) throw new LibraError(LIBRA_MESSAGES.signedOut)
+    if (!res.ok || data.error || !data.reply) {
+      throw new LibraError(typeof data.error === 'string' ? data.error : LIBRA_MESSAGES.broken)
+    }
+    return { ...data, userId: session.user.id }
   }
 
   function sendSuggestion(text) {
@@ -137,7 +177,7 @@ export default function Copilot() {
               <div
                 style={{
                   background: msg.role === 'user' ? 'linear-gradient(135deg, var(--violet), var(--coral))' : 'var(--card)',
-                  border: msg.role === 'user' ? 'none' : '1px solid var(--card-border)',
+                  border: msg.role === 'user' ? 'none' : msg.error ? '1px solid var(--coral)' : '1px solid var(--card-border)',
                   borderRadius: '16px',
                   padding: '12px 16px',
                   fontSize: '14.5px',
