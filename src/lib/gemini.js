@@ -30,7 +30,12 @@ function isBusy(err) {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
-export async function generate(request, deadline) {
+// Streams a reply, handing each piece of text to onText as it arrives.
+// Busy or slow models are retried down ATTEMPTS, but only before anything has been streamed: once
+// the user has seen words, a failure is reported instead of starting over.
+// Returns { text, functionCalls, content } (content = the model turn, all parts
+// kept, so a tool round trip can send it back as is).
+export async function generateStream(request, deadline, onText) {
   let lastError
   for (const { model, delay } of ATTEMPTS) {
     if (delay) await sleep(delay)
@@ -38,15 +43,37 @@ export async function generate(request, deadline) {
     if (left < MIN_ATTEMPT_MS) break
 
     const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), Math.min(ATTEMPT_MS, left))
+    let timer = setTimeout(() => controller.abort(), Math.min(ATTEMPT_MS, left))
+    let started = false
     try {
-      return await ai.models.generateContent({
+      const stream = await ai.models.generateContentStream({
         ...request,
         model,
         config: { ...request.config, abortSignal: controller.signal },
       })
+      const parts = []
+      let text = ''
+      for await (const chunk of stream) {
+        if (!started) {
+          // First words in: from here the whole remaining budget applies
+          started = true
+          clearTimeout(timer)
+          timer = setTimeout(() => controller.abort(), Math.max(0, deadline - Date.now()))
+        }
+        const chunkParts = chunk.candidates?.[0]?.content?.parts || []
+        parts.push(...chunkParts)
+        const piece = chunkParts.filter((p) => p.text && !p.thought).map((p) => p.text).join('')
+        if (piece) {
+          text += piece
+          onText(piece)
+        }
+      }
+      const functionCalls = parts.filter((p) => p.functionCall).map((p) => p.functionCall)
+      return { text, functionCalls, content: { role: 'model', parts } }
     } catch (err) {
-      lastError = controller.signal.aborted ? new AiTimeout() : err
+      const error = controller.signal.aborted ? new AiTimeout() : err
+      if (started) throw error
+      lastError = error
       if (!isBusy(err) && !controller.signal.aborted) throw err
       console.warn(`${model} ${controller.signal.aborted ? 'timed out' : `returned ${err.status}`}`)
     } finally {

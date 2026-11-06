@@ -25,7 +25,12 @@ export async function executeTool(toolName, args, userId) {
       return { success: false, message: insertError.message }
     }
 
-    return { success: true, message: `Logged ${args.value} ${tracker.unit} for ${tracker.name}` }
+    return {
+      success: true,
+      message: `Logged ${args.value} ${tracker.unit} for ${tracker.name}`,
+      tracker: { name: tracker.name, unit: tracker.unit, color: tracker.color || null },
+      value: args.value,
+    }
   }
 
   if (toolName === 'create_tracker') {
@@ -41,7 +46,12 @@ export async function executeTool(toolName, args, userId) {
       return { success: false, message: error.message }
     }
 
-    return { success: true, message: `Created new tracker: ${args.name} (target: ${args.target_value} ${args.unit})` }
+    return {
+      success: true,
+      message: `Created new tracker: ${args.name} (target: ${args.target_value} ${args.unit})`,
+      tracker: { name: args.name, unit: args.unit, color: null },
+      value: args.target_value,
+    }
   }
   if (toolName === 'generate_meal_plan') {
     return {

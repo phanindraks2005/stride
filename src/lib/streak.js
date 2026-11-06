@@ -1,33 +1,37 @@
 import { supabase } from './supabase'
+import { dayKey, streakFromDays } from './streakCore'
+
+export { dayKey, lastDays, streakFromDays } from './streakCore'
+
+// Streak stats plus each day's total per tracker ({ dayKey: { trackerId: sum } }),
+// which the heatmap and the weekly chart are drawn from.
+// Supabase returns at most 1,000 rows per request, so read the logs in pages.
+const PAGE = 1000
+
+export async function getStreakStats(userId) {
+  const logs = []
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase
+      .from('logs')
+      .select('logged_at, tracker_id, value')
+      .eq('user_id', userId)
+      .order('id')
+      .range(from, from + PAGE - 1)
+    if (error) throw error
+    logs.push(...data)
+    if (data.length < PAGE) break
+  }
+  const byDay = {}
+  for (const log of logs) {
+    const key = dayKey(log.logged_at)
+    byDay[key] ??= {}
+    byDay[key][log.tracker_id] = (byDay[key][log.tracker_id] || 0) + log.value
+  }
+  return { ...streakFromDays(new Set(Object.keys(byDay))), byDay }
+}
 
 export async function calculateStreak(userId) {
-  const { data: logs } = await supabase
-    .from('logs')
-    .select('logged_at')
-    .eq('user_id', userId)
-    .order('logged_at', { ascending: false })
-
-  if (!logs || logs.length === 0) return 0
-
-  // Get unique dates (as date strings, ignoring time) that have at least one log
-  const loggedDates = new Set(
-    logs.map((log) => new Date(log.logged_at).toDateString())
-  )
-
-  let streak = 0
-  let checkDate = new Date()
-  checkDate.setHours(0, 0, 0, 0)
-
-  // If nothing logged today yet, start checking from yesterday instead —
-  // so the streak doesn't reset to 0 just because today isn't over yet
-  if (!loggedDates.has(checkDate.toDateString())) {
-    checkDate.setDate(checkDate.getDate() - 1)
-  }
-
-  while (loggedDates.has(checkDate.toDateString())) {
-    streak++
-    checkDate.setDate(checkDate.getDate() - 1)
-  }
-
-  return streak
+  const { current } = await getStreakStats(userId)
+  return current
 }
+

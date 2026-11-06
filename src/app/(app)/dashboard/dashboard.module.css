@@ -1,0 +1,86 @@
+.page {
+  max-width: 1240px; margin: 0 auto;
+  padding: 36px clamp(16px, 3vw, 40px) 72px;
+  display: flex; flex-direction: column; gap: 24px;
+}
+
+.header { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap; padding-bottom: 4px; }
+.title { font-size: clamp(32px, 3.4vw, 44px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; }
+.subtitle { margin-top: 6px; color: var(--ink-2); font-size: 16px; }
+.headerActions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.dayNav { display: flex; align-items: center; gap: 2px; padding: 2px; border-radius: 12px; background: var(--surface-1); }
+.dayNav :global(.icon-btn:disabled) { opacity: .3; cursor: not-allowed; background: none; }
+
+.top { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 16px; }
+
+.sectionHead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px 16px; flex-wrap: wrap; margin: 12px 0 14px; }
+.sectionTitle { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; display: flex; align-items: baseline; gap: 12px; }
+.sectionCount { font-size: 14px; font-weight: 500; letter-spacing: 0; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.gestureHint { display: none; font-size: 13px; color: var(--ink-3); }
+@media (hover: none) and (pointer: coarse) { .gestureHint { display: block; } }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 16px; align-items: start; }
+
+.addCard {
+  min-height: 352px; border-radius: var(--r-card);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 24px;
+  background: transparent; color: var(--ink-2); font-weight: 600; font-size: 16px; text-align: center;
+  border: 1px dashed #ffffff24;
+  transition: background-color .25s var(--ease), color .25s var(--ease), border-color .25s var(--ease);
+  animation: rise .6s var(--ease) backwards;
+}
+.addCard:hover { background: var(--surface-1); color: var(--ink); border-color: #ffffff38; }
+.addIcon {
+  display: grid; place-items: center; width: 52px; height: 52px; border-radius: 14px; margin-bottom: 6px;
+  background: var(--surface-2); color: var(--ink); box-shadow: inset 0 1px 0 #ffffff12, 0 2px 0 #000;
+  transition: transform .25s var(--ease), background-color .25s var(--ease), color .25s var(--ease);
+}
+.addCard:hover .addIcon { transform: rotate(90deg); background: var(--volt); color: var(--volt-ink); }
+.addHint { font-size: 13.5px; font-weight: 400; color: var(--ink-3); }
+@media (max-width: 640px) { .addCard { min-height: 160px; } }
+
+.empty {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 14px;
+  padding: 40px; border-radius: var(--r-sheet); background: var(--surface-1); max-width: 760px;
+}
+.emptyTitle { font-size: 28px; font-weight: 800; letter-spacing: -0.03em; }
+.suggestions { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 10px; }
+.suggestion {
+  display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 12px;
+  background: color-mix(in srgb, var(--hue) 12%, var(--surface-2)); color: var(--ink); font-weight: 600; font-size: 14px;
+  transition: background-color .2s var(--ease), transform .15s var(--ease);
+}
+.suggestion::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--hue); }
+.suggestion:hover { background: color-mix(in srgb, var(--hue) 22%, var(--surface-2)); }
+.suggestion:active { transform: scale(.97); }
+
+.errorCard {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 12px;
+  padding: 40px; border-radius: var(--r-sheet); background: var(--surface-1); max-width: 560px; margin-top: 40px;
+}
+.errorTitle { font-size: 26px; font-weight: 800; letter-spacing: -0.03em; }
+
+@media (max-width: 1180px) {
+  .top { grid-template-columns: minmax(0, 1fr); }
+}
+.dayNav { border: 1px solid #ffffff0f; }
+@media (max-width: 860px) {
+  .page { padding-top: 24px; gap: 20px; }
+  .header { align-items: flex-start; }
+  .headerActions { width: 100%; justify-content: space-between; }
+  .empty { padding: 28px 22px; }
+}
+
+/* Empty state picture: three little vessels filling in their colours */
+.emptyArt { display: flex; align-items: flex-end; justify-content: center; gap: 14px; height: 220px; }
+.emptyArt span { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.emptyArt i {
+  position: relative; display: block; width: 64px; height: 180px; border-radius: 18px; overflow: hidden;
+  background: #0c0d16; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--hue) 35%, transparent), 0 16px 36px -18px var(--hue);
+}
+.emptyArt i::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: var(--pct);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--hue) 85%, #0c0d16), color-mix(in srgb, var(--hue) 45%, #0c0d16));
+  transform-origin: bottom; animation: grow-y 1.1s var(--ease) backwards;
+}
+.emptyArt b { font-size: 12.5px; font-weight: 700; color: var(--hue); }

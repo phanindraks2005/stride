@@ -1,0 +1,170 @@
+/* Tracker card: header, a tall wave vessel with the reading, big quick-add keys */
+
+.wrap {
+  position: relative; border-radius: var(--r-card);
+  animation: rise .6s var(--ease) backwards;
+}
+
+.card {
+  display: flex; flex-direction: column; gap: 12px; padding: 14px 14px 10px;
+  touch-action: pan-y;
+  transition: transform .35s var(--ease), border-color .35s var(--ease), box-shadow .35s var(--ease);
+}
+.card[data-dragging] { transition: none; }
+/* Cards below the fold skip layout and paint until they scroll near */
+.wrap:not(.compact) .card { content-visibility: auto; contain-intrinsic-size: auto 352px; }
+.card[data-done] { border-color: #d4ff3a33; }
+
+/* ── header ── */
+.wrap:has(.menu) { z-index: 5; }
+.head { z-index: 3; display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 36px; margin-right: -6px; }
+.name { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; min-width: 0; }
+.nameText { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.icon {
+  display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; flex: none;
+  background: color-mix(in srgb, var(--hue) 16%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--hue) 22%, transparent);
+}
+.headRight { display: flex; align-items: center; gap: 4px; flex: none; }
+.pct { font-size: 14px; font-weight: 700; color: var(--hue); padding: 0 4px; }
+.doneChip {
+  display: inline-flex; align-items: center; gap: 4px; height: 26px; padding: 0 10px; border-radius: 99px;
+  background: var(--volt); color: var(--volt-ink); font-size: 12.5px; font-weight: 700;
+  animation: pop-in .5s var(--ease) both;
+}
+@keyframes pop-in { from { transform: scale(.5); opacity: 0; } }
+
+/* ── vessel ── */
+.vessel {
+  position: relative; overflow: hidden; border-radius: 14px;
+  background: #0d0e18; min-height: 188px;
+  box-shadow: inset 0 0 0 1px #ffffff0a, inset 0 10px 30px -14px #000;
+  display: flex; flex-direction: column; justify-content: flex-end;
+}
+.reading { position: relative; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; }
+.total { display: flex; align-items: baseline; gap: 8px; }
+.total :global(.num) { display: inline-block; transform-origin: left bottom; font-size: clamp(64px, 6vw, 84px); text-shadow: 0 2px 18px #0008; }
+.unit { font-size: 16px; font-weight: 600; color: #f2f4f3cc; }
+.goal { font-size: 14px; color: #f2f4f3b3; text-shadow: 0 1px 8px #0009; }
+.card[data-done] .goal { color: var(--ink); }
+
+/* A measuring scale up the right edge, like a jug */
+.scale {
+  position: absolute; right: 12px; top: 14px; bottom: 14px; width: 10px;
+  display: flex; flex-direction: column; justify-content: space-between; pointer-events: none;
+}
+.scale i { display: block; height: 1px; width: 100%; background: #ffffff26; }
+.scale i:nth-child(2) { width: 60%; margin-left: auto; }
+
+/* ── quick add ── */
+.quickRow { display: flex; gap: 8px; }
+.quick {
+  position: relative; flex: 1; min-width: 0; height: 52px; border-radius: 12px;
+  background: color-mix(in srgb, var(--hue) 14%, var(--surface-2)); color: var(--hue);
+  box-shadow: inset 0 1px 0 #ffffff12, 0 2px 0 color-mix(in srgb, var(--hue) 22%, #000);
+  transition: transform .12s var(--ease), box-shadow .12s var(--ease), background-color .2s var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+.quick:hover:not(:disabled) { background: color-mix(in srgb, var(--hue) 22%, var(--surface-2)); }
+.quick:active:not(:disabled) {
+  transform: translateY(2px) scale(.96);
+  box-shadow: inset 0 1px 0 #ffffff0a, 0 0 0 color-mix(in srgb, var(--hue) 22%, #000);
+  background: color-mix(in srgb, var(--hue) 30%, var(--surface-2));
+}
+.quick:disabled { cursor: progress; }
+.quickLabel { position: relative; display: inline-flex; align-items: baseline; gap: 4px; font-size: 18px; font-weight: 800; font-stretch: 75%; font-variant-numeric: tabular-nums; }
+.quickLabel small { font-size: 12.5px; font-weight: 600; font-stretch: 100%; opacity: .8; }
+.rippleBox { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.ripple {
+  position: absolute; width: 16px; height: 16px; margin: -8px; border-radius: 50%;
+  background: color-mix(in srgb, var(--hue) 55%, transparent);
+  animation: ripple .7s var(--ease) forwards;
+}
+@keyframes ripple { to { transform: scale(14); opacity: 0; } }
+.floatUp {
+  position: absolute; top: 0; translate: -50% 0; pointer-events: none; z-index: 3;
+  font-size: 15px; font-weight: 800; color: var(--hue); white-space: nowrap; font-variant-numeric: tabular-nums;
+  animation: float-up .9s var(--ease) forwards;
+}
+@keyframes float-up {
+  0% { transform: translateY(0) scale(.8); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(-46px) scale(1.1); opacity: 0; }
+}
+.typeBtn {
+  flex: none; width: 52px; height: 52px; border-radius: 12px; display: grid; place-items: center;
+  background: var(--surface-2); color: var(--ink-2);
+  box-shadow: inset 0 1px 0 #ffffff0d, 0 2px 0 #000;
+  transition: transform .12s var(--ease), color .2s var(--ease), background-color .2s var(--ease);
+}
+.typeBtn:hover { color: var(--ink); background: var(--surface-3); }
+.typeBtn:active { transform: translateY(2px) scale(.96); box-shadow: none; }
+
+.typeRow { display: flex; gap: 8px; animation: fade .2s var(--ease) both; }
+.typeRow :global(.input) { height: 52px; min-width: 0; flex: 1; font-size: 16px; }
+.typeRow :global(.btn) { height: 52px; padding: 0 16px; }
+
+/* ── footer ── */
+.foot {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  min-height: 40px; margin: 0 -6px; padding: 0 6px; border-radius: 8px;
+  font-size: 13.5px; font-weight: 500; color: var(--ink-2); text-align: left;
+  transition: background-color .2s var(--ease), color .2s var(--ease);
+}
+.foot:hover { background: #ffffff08; color: var(--ink); }
+.foot svg { color: var(--ink-3); flex: none; }
+
+/* ── goal reached ── */
+.celebrate { position: absolute; inset: 0; pointer-events: none; z-index: 6; border-radius: inherit; }
+.ring {
+  position: absolute; inset: -1px; border-radius: inherit;
+  box-shadow: 0 0 0 2px var(--volt), 0 0 40px 6px #d4ff3a55;
+  animation: ring 1.2s var(--ease) forwards;
+}
+@keyframes ring { 0% { opacity: 0; transform: scale(.97); } 25% { opacity: 1; } 100% { opacity: 0; transform: scale(1.03); } }
+
+/* ── menu ── */
+.menuWrap { position: relative; }
+.menu {
+  position: absolute; right: 0; top: calc(100% + 4px); z-index: 30; min-width: 170px;
+  display: flex; flex-direction: column; padding: 6px; border-radius: 12px;
+  background: var(--surface-3); box-shadow: 0 20px 40px -10px #000c;
+  animation: fade .15s var(--ease) both;
+}
+.menu button {
+  display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 10px; border-radius: 8px;
+  font-size: 14px; text-align: left;
+}
+.menu button:hover, .menu button:focus-visible { background: #ffffff10; }
+.menuDanger { color: var(--danger); }
+
+/* ── swipe actions (touch) ── */
+.swipeActions {
+  position: absolute; inset: 0 0 0 auto; width: 160px; padding-left: 12px;
+  display: flex; gap: 6px; align-items: stretch;
+}
+.swipeActions button {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  border-radius: var(--r-card); background: var(--surface-3); color: var(--ink); font-size: 13px; font-weight: 600;
+}
+.swipeActions .swipeDelete { background: #ff5d5d26; color: var(--danger); }
+.wrap .card { position: relative; z-index: 1; }
+
+/* ── compact (phone mockups) ── */
+.compact .card { padding: 9px; gap: 8px; }
+.compact .head { min-height: 24px; margin: 0; }
+.compact .icon { width: 22px; height: 22px; border-radius: 6px; }
+.compact .name { font-size: 14px; gap: 8px; }
+.compact .pct { font-size: 12px; }
+.compact .vessel { min-height: 76px; border-radius: 10px; }
+.compact .reading { padding: 8px 10px; gap: 2px; }
+.compact .total :global(.num) { font-size: 38px; }
+.compact .unit { font-size: 13px; }
+.compact .goal { display: none; }
+.compact .scale { display: none; }
+
+@media (max-width: 640px) { .vessel { min-height: 164px; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ripple, .floatUp, .ring { display: none; }
+}

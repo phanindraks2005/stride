@@ -1,37 +1,48 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { LayoutGrid, LineChart, Dumbbell, NotebookPen } from 'lucide-react'
+import LibraGlyph from '@/components/LibraGlyph'
 import { supabase } from '@/lib/supabase'
+
+const LibraIcon = ({ size }) => <LibraGlyph size={size + 4} draw inherit />
 
 const slides = [
   {
-    title: 'Your Dashboard',
-    desc: 'Track daily habits like water, sleep, and protein. Log progress in seconds, edit or delete anytime, and watch your streak grow.',
-    emoji: '📊',
+    title: 'Today',
+    desc: 'Your trackers for the day. Tap a quick-add button or type an amount, and keep the streak going by logging anything once a day.',
+    icon: LayoutGrid,
+    color: 'var(--t-water)',
   },
   {
-    title: 'Libra, your copilot',
-    desc: "Talk to Libra like a real coach. Ask it to log something, build you a meal or workout plan, or analyze how you're doing — it reads your real data.",
-    emoji: '✨',
+    title: 'Libra, your coach',
+    desc: 'Tell Libra what you did and it logs it. Ask for a meal plan, a workout, or how your week went. It reads your real data.',
+    icon: LibraIcon,
+    color: 'var(--volt)',
   },
   {
     title: 'Progress',
-    desc: 'See your trends over the week, month, or year. Compare periods and spot patterns in what you\'re actually doing.',
-    emoji: '📈',
+    desc: 'Week, month and year charts for every tracker, with this period compared to the last.',
+    icon: LineChart,
+    color: 'var(--t-sleep)',
   },
   {
     title: 'Fitness',
-    desc: 'Organize workouts by muscle group. Pick your focus each day, log sets and reps, and let Libra analyze your training.',
-    emoji: '💪',
+    desc: 'Pick today’s focus, log sets, reps and weight per exercise, and see what you lifted last time.',
+    icon: Dumbbell,
+    color: 'var(--t-workout)',
   },
   {
     title: 'Notes',
-    desc: 'A private journal for anything on your mind — training notes, meal ideas, reminders. Titled, searchable, all yours.',
-    emoji: '📝',
+    desc: 'A private notebook for training notes, meal ideas and anything else. It saves as you type.',
+    icon: NotebookPen,
+    color: 'var(--t-protein)',
   },
 ]
 
 export default function ProductTour({ onComplete }) {
   const [step, setStep] = useState(0)
+  const dialogRef = useRef(null)
+  const primaryRef = useRef(null)
 
   async function finish() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -41,53 +52,59 @@ export default function ProductTour({ onComplete }) {
     onComplete()
   }
 
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (dialog && !dialog.open) dialog.showModal()
+    function onCancel(e) {
+      e.preventDefault()
+      finish()
+    }
+    dialog?.addEventListener('cancel', onCancel)
+    return () => dialog?.removeEventListener('cancel', onCancel)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => { primaryRef.current?.focus() }, [step])
+
   const slide = slides[step]
   const isLast = step === slides.length - 1
+  const Icon = slide.icon
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 100,
-      background: 'rgba(10,10,15,0.92)', backdropFilter: 'blur(8px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
-    }}>
-      <div style={{
-        maxWidth: '420px', width: '100%',
-        background: 'var(--card)', border: '1px solid var(--card-border)',
-        borderRadius: '20px', padding: '40px 36px', textAlign: 'center',
-      }}>
-        <div style={{ fontSize: '40px', marginBottom: '16px' }}>{slide.emoji}</div>
-        <h2 style={{ fontSize: '22px', marginBottom: '12px' }}>{slide.title}</h2>
-        <p style={{ fontSize: '14px', color: 'var(--text-mid)', lineHeight: '1.6', marginBottom: '28px' }}>
-          {slide.desc}
+    <dialog
+      ref={dialogRef}
+      aria-labelledby="tour-title"
+      aria-describedby="tour-desc"
+      style={{
+        margin: 'auto', width: 'min(440px, calc(100vw - 32px))', border: 0, padding: 32,
+        borderRadius: 24, background: 'var(--surface-1)', color: 'var(--ink)',
+        boxShadow: '0 40px 100px -20px #000',
+      }}
+    >
+      <style>{`dialog::backdrop { background: #0a0b0dd9; }`}</style>
+      <div key={step} style={{ animation: 'rise .4s var(--ease) both' }}>
+        <span style={{ width: 52, height: 52, borderRadius: 14, display: 'grid', placeItems: 'center', background: `color-mix(in srgb, ${slide.color} 16%, transparent)`, color: slide.color }}>
+          <Icon size={24} aria-hidden="true" />
+        </span>
+        <p style={{ marginTop: 22, fontSize: 13, fontWeight: 600, color: 'var(--ink-3)' }} className="tnum">
+          {step + 1} of {slides.length}
         </p>
-
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '24px' }}>
-          {slides.map((_, i) => (
-            <div
-              key={i}
-              style={{
-                width: i === step ? '20px' : '6px', height: '6px', borderRadius: '100px',
-                background: i === step ? 'linear-gradient(135deg, var(--violet), var(--coral))' : 'var(--card-border)',
-                transition: 'all 0.2s',
-              }}
-            />
-          ))}
-        </div>
-
-        <button
-          onClick={() => (isLast ? finish() : setStep(step + 1))}
-          className="log-btn"
-          style={{ width: '100%', marginBottom: '12px' }}
-        >
-          {isLast ? "Let's go" : 'Next'}
-        </button>
-        <button
-          onClick={finish}
-          style={{ background: 'transparent', border: 'none', color: 'var(--text-low)', fontSize: '13px', cursor: 'pointer' }}
-        >
-          Skip tour
-        </button>
+        <h2 id="tour-title" style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.03em', marginTop: 4 }}>{slide.title}</h2>
+        <p id="tour-desc" style={{ fontSize: 16, lineHeight: 1.55, color: 'var(--ink-2)', marginTop: 10, minHeight: 75 }}>{slide.desc}</p>
       </div>
-    </div>
+
+      <div style={{ display: 'flex', gap: 6, margin: '22px 0' }} aria-hidden="true">
+        {slides.map((_, i) => (
+          <span key={i} style={{ height: 4, flex: 1, borderRadius: 99, background: i <= step ? 'var(--volt)' : 'var(--surface-3)', transition: 'background-color .3s var(--ease)' }} />
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button ref={primaryRef} type="button" className="btn btn-primary" style={{ flex: 1 }} onClick={() => (isLast ? finish() : setStep(step + 1))}>
+          {isLast ? 'Start logging' : 'Next'}
+        </button>
+        {!isLast && <button type="button" className="btn btn-ghost" onClick={finish}>Skip</button>}
+      </div>
+    </dialog>
   )
 }

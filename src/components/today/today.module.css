@@ -1,0 +1,38 @@
+.card {
+  position: relative; contain: layout style;
+  background: linear-gradient(180deg, #191a29, var(--surface-1) 60%);
+  border: 1px solid #ffffff12;
+  box-shadow: inset 0 1px 0 #ffffff0d, 0 1px 2px #0006;
+  border-radius: var(--r-card);
+  padding: 22px;
+  animation: rise .6s var(--ease) backwards;
+}
+.cardTitle { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+.cardSub { font-size: 14px; color: var(--ink-2); margin-top: 2px; }
+
+/* ── streak ── */
+.streak { display: flex; flex-direction: column; justify-content: space-between; gap: 22px; }
+.streakTop { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.streakNum { display: flex; align-items: baseline; gap: 8px; color: var(--volt); }
+.streakNum :global(.num) { font-size: clamp(72px, 7vw, 104px); }
+.streakUnit { font-size: 15px; font-weight: 600; color: var(--ink-2); }
+
+.chain { list-style: none; display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px 8px; }
+.chainDay { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.chainCell {
+  width: 100%; height: 34px; border-radius: 8px; background: var(--surface-3);
+  animation: pop .45s var(--ease) both;
+}
+.chainCell[data-logged] { background: var(--volt); }
+.chainCell[data-today]:not([data-logged]) { background: transparent; box-shadow: inset 0 0 0 2px var(--volt); }
+.chainLabel { font-size: 11px; font-weight: 600; color: var(--ink-3); }
+@keyframes pop { from { transform: scale(.4); opacity: 0; } }
+
+/* ── compact (phone mockups) ── */
+.compact.streak { gap: 14px; padding: 16px; }
+.compact .streakNum :global(.num) { font-size: 64px; }
+.compact .chain { grid-template-columns: repeat(14, 1fr); gap: 3px; }
+.compact .chainCell { height: auto; aspect-ratio: 1; }
+.compact .chainCell { border-radius: 4px; }
+.compact .chainLabel { display: none; }
+.chainDay:nth-child(-n + 7) .chainLabel { display: none; }

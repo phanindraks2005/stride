@@ -60,7 +60,7 @@ export async function buildUserContext(userId) {
   }).join('\n')
 
   const notesSummary = notes?.length
-    ? notes.map((n) => `- "${n.title}" (${new Date(n.created_at).toLocaleDateString()}): ${n.content.slice(0, 150)}${n.content.length > 150 ? '...' : ''}`).join('\n')
+    ? notes.map((n) => `- "${n.title}" (${new Date(n.created_at).toLocaleDateString()}): ${n.content.slice(0, 150)}${n.content.length > 150 ? '…' : ''}`).join('\n')
     : 'No notes yet.'
 
   const workoutSummary = recentWorkoutLogs?.length

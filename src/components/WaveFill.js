@@ -1,55 +1,31 @@
-'use client'
-
-export default function WaveFill({ percent, color = 'var(--violet)' }) {
-  const clampedPercent = Math.min(100, Math.max(0, percent))
+// A liquid level in a tracker's hue. The level eases to `percent` (so a log visibly
+// rises), and two layered sine waves drift across the surface at their own speed.
+export default function WaveFill({ percent, color = 'var(--t-water)', speed = 6, rise = true, className, style }) {
+  const level = Math.min(100, Math.max(0, percent || 0))
 
   return (
-    <div style={{
-      position: 'absolute', inset: 0, borderRadius: '18px', overflow: 'hidden', zIndex: 0,
-    }}>
+    <div className={className} style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', ...style }} aria-hidden="true">
       <div
         style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: `${clampedPercent}%`,
-          transition: 'height 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+          position: 'absolute', left: 0, right: 0, bottom: 0, height: '100%',
+          transform: `translateY(${100 - level}%)`,
+          transition: 'transform 1.1s var(--ease)',
+          animation: rise ? 'wave-rise 1.4s var(--ease) both' : undefined,
+          willChange: 'transform',
         }}
       >
-        {/* solid fill body */}
-        <div style={{
-          position: 'absolute', top: '10px', left: 0, right: 0, bottom: 0,
-          background: color, opacity: 0.18,
-        }} />
-
-        {/* wave riding on top of the fill surface */}
-        <svg
-          style={{
-            position: 'absolute',
-            top: '-10px',
-            left: '-50%',
-            width: '200%',
-            height: '24px',
-            animation: 'waveMove 3.5s linear infinite',
-          }}
-          viewBox="0 0 400 24"
-          preserveAspectRatio="none"
-        >
-          <path
-            d="M0,12 C50,24 100,0 150,12 C200,24 250,0 300,12 C350,24 400,0 400,12 L400,24 L0,24 Z"
-            fill={color}
-            opacity="0.35"
-          />
-        </svg>
+        <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, color-mix(in srgb, ${color} 62%, #0d0e18), color-mix(in srgb, ${color} 34%, #0d0e18))` }} />
+        {level > 0 && level < 100 && (
+          <>
+            <svg viewBox="0 0 400 16" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 'calc(100% - 1px)', left: 0, width: '200%', height: 14, fill: `color-mix(in srgb, ${color} 62%, #0d0e18)`, animation: `drift ${speed}s linear infinite` }}>
+              <path d="M0 8 Q25 1 50 8 T100 8 T150 8 T200 8 T250 8 T300 8 T350 8 T400 8 V16 H0Z" />
+            </svg>
+            <svg viewBox="0 0 400 16" preserveAspectRatio="none" style={{ position: 'absolute', bottom: 'calc(100% - 2px)', left: 0, width: '200%', height: 10, fill: `color-mix(in srgb, ${color} 40%, transparent)`, animation: `drift ${speed * 1.6}s linear infinite reverse` }}>
+              <path d="M0 8 Q25 2 50 8 T100 8 T150 8 T200 8 T250 8 T300 8 T350 8 T400 8 V16 H0Z" />
+            </svg>
+          </>
+        )}
       </div>
-
-      <style jsx>{`
-        @keyframes waveMove {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-25%); }
-        }
-      `}</style>
     </div>
   )
 }
