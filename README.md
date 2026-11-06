@@ -73,3 +73,7 @@ The app runs at http://localhost:3000.
 The app expects these tables, each with a `user_id` column tied to `auth.users`: `profiles`, `trackers`, `logs`, `notes`, `muscle_groups`, `exercises`, `exercise_logs`, `daily_selections`, `messages`.
 
 Run [`supabase/schema.sql`](supabase/schema.sql) in the Supabase SQL editor to create them with row-level security (it is safe to run again; later additions such as `trackers.color`, `profiles.units` and `profiles.weekly_sessions` are `add column if not exists`). Turn off email confirmation, since sign-up seeds the starter trackers straight away. Without the newer profile columns the app still works and keeps units and the weekly goal in the browser.
+
+### Keep-alive
+
+`.github/workflows/supabase-keep-alive.yml` makes one small read query to Supabase every 3 days so a free project is not paused for inactivity. It needs two repository secrets (Settings → Secrets and variables → Actions): `SUPABASE_URL` (the project URL) and `SUPABASE_ANON_KEY` (the anon/publishable key). It can also be run by hand from the Actions tab.

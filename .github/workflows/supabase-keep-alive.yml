@@ -1,0 +1,36 @@
+# Free Supabase projects pause after a week without activity. This makes one
+# small read every 3 days so the database stays awake.
+name: Supabase keep-alive
+
+on:
+  schedule:
+    - cron: '0 6 */3 * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Read one row
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "Add the SUPABASE_URL and SUPABASE_ANON_KEY repository secrets." >&2
+            exit 1
+          fi
+          # The anon role has no table grants here, so Postgres answers 401
+          # (permission denied). Any answer from the database counts as activity.
+          status=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 \
+            "${SUPABASE_URL%/}/rest/v1/profiles?select=user_id&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+          echo "Supabase answered HTTP $status"
+          if [ "$status" = "000" ] || [ "$status" -ge 500 ]; then
+            echo "Supabase did not answer; the project may be paused or down." >&2
+            exit 1
+          fi
