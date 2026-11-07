@@ -48,3 +48,6 @@ AGENTS.md
 # editor and assistant files
 .vscode/
 .claude/
+
+# private study notes
+detailed notes-*.pdf
