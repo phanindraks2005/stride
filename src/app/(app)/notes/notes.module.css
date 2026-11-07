@@ -113,9 +113,11 @@
 @media (max-width: 860px) {
   .page { grid-template-columns: minmax(0, 1fr); height: calc(100dvh - 60px - var(--tabbar-h) - env(safe-area-inset-bottom)); position: relative; overflow: hidden; }
   .list { padding: 20px 16px; box-shadow: none; }
-  .editorPane { position: fixed; inset: 0; z-index: 60; padding-top: env(safe-area-inset-top); background: var(--bg); transform: translateX(100%); visibility: hidden; transition: transform .35s var(--ease), visibility 0s .35s; }
+  /* Between the top bar and the tab bar: .main isolates its stacking, so the
+     editor can't rise above them */
+  .editorPane { position: fixed; inset: 60px 0 calc(var(--tabbar-h) + env(safe-area-inset-bottom)); z-index: 30; background: var(--bg); transform: translateX(100%); visibility: hidden; transition: transform .35s var(--ease), visibility 0s .35s; }
   .page[data-editing] .editorPane { transform: none; visibility: visible; transition: transform .35s var(--ease); }
-  .editor { padding: 8px 16px calc(48px + env(safe-area-inset-bottom)); }
+  .editor { padding: 8px 16px 48px; }
   .editor { width: 100%; margin: 0; border-radius: 0; border: 0; box-shadow: none; padding-top: 16px; }
   .created { display: none; }
   .back { display: inline-flex; }
