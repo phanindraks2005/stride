@@ -76,4 +76,4 @@ Run [`supabase/schema.sql`](supabase/schema.sql) in the Supabase SQL editor to c
 
 ### Keep-alive
 
-`.github/workflows/supabase-keep-alive.yml` makes one small read query to Supabase every 3 days so a free project is not paused for inactivity. It needs two repository secrets (Settings → Secrets and variables → Actions): `SUPABASE_URL` (the project URL) and `SUPABASE_ANON_KEY` (the anon/publishable key). It can also be run by hand from the Actions tab.
+`.github/workflows/supabase-keep-alive.yml` makes one small read query to Supabase every 3 days so a free project is not paused for inactivity. It needs two repository secrets (Settings → Secrets and variables → Actions): `SUPABASE_URL` (the project URL) and `SUPABASE_ANON_KEY` (the anon/publishable key). It re-enables itself on every run, so GitHub never turns it off for inactivity, and it can also be run by hand from the Actions tab.

@@ -1,5 +1,6 @@
 # Free Supabase projects pause after a week without activity. This makes one
-# small read every 3 days so the database stays awake.
+# small read every 3 days so the database stays awake. It also re-enables
+# itself through the API, so GitHub's 60-day inactivity rule never turns it off.
 name: Supabase keep-alive
 
 on:
@@ -13,6 +14,8 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      actions: write
     steps:
       - name: Read one row
         env:
@@ -34,3 +37,11 @@ jobs:
             echo "Supabase did not answer; the project may be paused or down." >&2
             exit 1
           fi
+
+      # GitHub disables scheduled workflows after 60 days without a commit.
+      # Enabling it again resets that timer, with no commit needed.
+      - name: Keep this workflow enabled
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/supabase-keep-alive.yml/enable"
