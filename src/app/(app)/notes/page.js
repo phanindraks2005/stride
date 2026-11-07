@@ -1,6 +1,6 @@
 'use client'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Check, ChevronLeft, NotebookPen, Plus, Search, Trash2, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useDemo } from '@/lib/useDemo'
@@ -54,7 +54,8 @@ function SaveState({ state, onRetry }) {
   )
 }
 
-// The open note lives in the URL, so it can be linked to and survives a reload
+// The open note lives in the URL, so it can be linked to and survives a reload.
+// A new note that isn't saved yet is ?id=new.
 function noteUrl(id) {
   window.history.replaceState(null, '', id ? `?id=${id}` : window.location.pathname)
 }
@@ -109,6 +110,7 @@ export default function Notes() {
     const id = new URLSearchParams(window.location.search).get('id')
     const note = id && notes.find((n) => String(n.id) === id)
     if (note) open(note)
+    else if (id) noteUrl(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status])
 
@@ -136,7 +138,10 @@ export default function Notes() {
           return
         }
         token.id = data.id
-        if (activeRef.current === token) setActiveId(data.id)
+        if (activeRef.current === token) {
+          setActiveId(data.id)
+          noteUrl(data.id)
+        }
         setNotes((prev) => [data, ...prev])
       } else {
         const { error } = await supabase.from('notes').update(values).eq('id', id)
@@ -187,7 +192,7 @@ export default function Notes() {
 
   // persist() takes its snapshot straight away, so switching never waits on the network
   function open(note) {
-    noteUrl(note?.id)
+    noteUrl(note ? note.id : 'new')
     persist()
     activeRef.current = { id: note ? note.id : null }
     const next = note ? { title: note.title === 'Untitled' ? '' : note.title || '', content: note.content || '' } : { title: '', content: '' }
@@ -201,6 +206,15 @@ export default function Notes() {
     setEditing(true)
     if (!note) setTimeout(() => titleRef.current?.focus())
   }
+
+  // The Notes item in the nav links to plain /notes: losing ?id= closes the note
+  const idParam = useSearchParams().get('id')
+  const shownId = useRef(idParam)
+  useEffect(() => {
+    if (shownId.current && !idParam && editing) back()
+    shownId.current = idParam
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idParam])
 
   function back() {
     noteUrl(null)
