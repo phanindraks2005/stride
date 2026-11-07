@@ -332,8 +332,9 @@
 
 /* Footer */
 .footer { max-width: var(--max); margin: 0 auto; padding: 96px var(--gutter) 40px; }
-.footLinks { display: flex; gap: 28px; flex-wrap: wrap; font-size: 15px; color: var(--ink-2); }
-.footLinks a { text-decoration: none; }
+.footLinks { display: flex; gap: 0 28px; flex-wrap: wrap; font-size: 15px; color: var(--ink-2); }
+/* Full-height tap targets on phones */
+.footLinks a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; }
 .footLinks a:hover { color: var(--ink); }
 .wordmark {
   font-size: clamp(120px, 35vw, 540px); font-stretch: 62%; font-weight: 800; line-height: .8;
