@@ -53,7 +53,8 @@ function Trend({ now, before }) {
   if (!before && !now) return null
   if (!before) return <span className={styles.trend} data-dir="up"><ArrowUpRight size={14} aria-hidden="true" />New</span>
   const pct = Math.round(((now - before) / before) * 100)
-  if (pct === 0) return <span className={styles.trend}>Even with last week</span>
+  // Small cards drop the note, like the percentages do
+  if (pct === 0) return <span className={styles.trend}>Even<span className={styles.trendNote}>with last week</span></span>
   const up = pct > 0
   return (
     <span className={styles.trend} data-dir={up ? 'up' : 'down'}>
