@@ -263,7 +263,7 @@ export default function TrackerCard({
 
         {!readOnly && (
           typing ? (
-            <form className={styles.typeRow} onSubmit={(e) => { e.preventDefault(); log(amount) }}>
+            <form className={styles.typeRow} onSubmit={(e) => { e.preventDefault(); log(amount) }} noValidate>
               <label htmlFor={inputId} className="sr-only">Amount of {tracker.name} in {tracker.unit}</label>
               <input
                 id={inputId}
