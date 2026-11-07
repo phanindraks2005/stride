@@ -44,3 +44,7 @@ next-env.d.ts
 # local notes
 CLAUDE.md
 AGENTS.md
+
+# editor and assistant files
+.vscode/
+.claude/
