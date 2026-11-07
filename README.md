@@ -4,6 +4,8 @@ A habit and fitness tracker with an AI copilot that can act on your data, not ju
 
 **Live:** https://stride-ks.vercel.app · **Demo, no account needed:** https://stride-ks.vercel.app/demo
 
+**Case study:** [phanindra-ks.vercel.app/projects/stride](https://phanindra-ks.vercel.app/projects/stride)
+
 ## Features
 
 - **Custom trackers.** Track anything with a unit and a daily target: water, sleep, protein, study hours. Each tracker has its own colour (pick one or let the name choose), a wave that fills toward the target, quick-add buttons sized to its unit that update the total instantly, and a sheet with the day's entries. On phones, hold a card or swipe it left to edit or delete it.
